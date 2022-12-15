@@ -1,23 +1,46 @@
-const router=require("express").Router()
-const InstaPost=require("./models")
+const router = require("express").Router()
+const uploader = require("./multer")
+const cloudinary = require("./cloudinary")
+const InstaPost = require("./models")
 const bodyParser = require("body-parser");
-router.use(bodyParser.urlencoded({ extended: false }))
 router.use(bodyParser.json());
-router.post("/form",async(req,res)=>{
-    console.log(req.body)
-    try{
-        const data=await InstaPost.insertMany(req.body);
-        console.log(data)
-        return res.json({
-            status:"success",
-            result:data
+router.get("/data", async (req, res) => {
+    try {
+        const getdata = await InstaPost.find();
+        res.json({
+            result: getdata
         })
     }
-    catch(e){
-        return res.json({
-            status:"404",
-            message:e.message
+    catch (e) {
+        res.send.json({
+            status: "failed",
+            message: e.message
         })
+
     }
+
 })
-module.exports=router
+router.post("/form", uploader.single('file'), async (req, res) => {
+    console.log(req.body,req.file)
+    try {
+        const upload = await cloudinary.v2.uploader.upload(req.file.path);
+        const data=await InstaPost.insertMany({
+            file: upload.secure_url,
+            Author:req.body.Author,
+            Location:req.body.Location,
+            Description:req.body.Description,
+            Likes:Math.ceil(Math.random()*1000),
+            Date:Date.now()
+        });
+        return res.json({
+            success: true,
+            result:data,
+        });
+    }
+    catch (e) {
+        return res.json({
+            err: e.message
+        });
+    }
+});
+module.exports = router
