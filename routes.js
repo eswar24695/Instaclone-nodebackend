@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 router.use(bodyParser.json());
 router.get("/data", async (req, res) => {
     try {
-        const getdata = await InstaPost.find();
+        const getdata = await InstaPost.find().sort({Date:-1});
         res.json({
             result: getdata
         })
